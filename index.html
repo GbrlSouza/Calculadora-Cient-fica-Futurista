@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Científica Futurista</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bd00ff;
+            --dark-bg: #0a0a1a;
+        }
+        
+        body {
+            background-color: var(--dark-bg);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .calculator {
+            background: linear-gradient(145deg, #111122, #0a0a1a);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2),
+                        0 0 60px rgba(189, 0, 255, 0.1);
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .calculator::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            z-index: -1;
+            filter: blur(5px);
+            opacity: 0.7;
+            border-radius: 22px;
+        }
+        
+        .display {
+            background-color: rgba(10, 10, 26, 0.8);
+            border-radius: 15px 15px 0 0;
+            padding: 20px;
+            text-align: right;
+            min-height: 120px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .display::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+        }
+        
+        .previous-operand {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            height: 24px;
+            overflow: hidden;
+        }
+        
+        .current-operand {
+            font-size: 2.5rem;
+            margin-top: 10px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+        
+        .btn-calc {
+            background-color: rgba(20, 20, 40, 0.8);
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            padding: 15px 0;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .btn-calc:hover {
+            background-color: rgba(40, 40, 70, 0.8);
+            color: var(--neon-blue);
+            transform: translateY(-2px);
+        }
+        
+        .btn-calc:active {
+            transform: translateY(0);
+        }
+        
+        .btn-calc.operator {
+            color: var(--neon-blue);
+            background-color: rgba(0, 243, 255, 0.1);
+        }
+        
+        .btn-calc.function {
+            color: var(--neon-purple);
+            background-color: rgba(189, 0, 255, 0.1);
+        }
+        
+        .btn-calc.equals {
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            font-weight: bold;
+        }
+        
+        .btn-calc::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn-calc:hover::before {
+            left: 100%;
+        }
+        
+        .scientific-panel {
+            transition: all 0.5s ease;
+        }
+        
+        .toggle-scientific {
+            background-color: rgba(20, 20, 40, 0.8);
+            color: var(--neon-purple);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin: 10px auto;
+            transition: all 0.3s;
+        }
+        
+        .toggle-scientific:hover {
+            transform: rotate(180deg);
+            color: var(--neon-blue);
+        }
+        
+        .power-btn {
+            width: 15px;
+            height: 15px;
+            background-color: #ff3b30;
+            border-radius: 50%;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            box-shadow: 0 0 5px #ff3b30;
+            cursor: pointer;
+        }
+        
+        .power-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 5px;
+            height: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+        }
+        
+        @media (max-width: 576px) {
+            .btn-calc {
+                padding: 12px 0;
+                font-size: 1rem;
+            }
+            
+            .current-operand {
+                font-size: 2rem;
+            }
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 40px;
+            background-color: var(--neon-blue);
+            animation: blink 1s infinite;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="calculator p-3 mb-5">
+                    <div class="power-btn" id="powerBtn"></div>
+                    <div class="display mb-3">
+                        <div class="previous-operand" id="previousOperand"></div>
+                        <div class="current-operand" id="currentOperand"><span class="cursor"></span></div>
+                    </div>
+                    
+                    <div class="toggle-scientific" id="toggleScientific">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    
+                    <div class="scientific-panel" id="scientificPanel" style="display: none;">
+                        <div class="row g-2 mb-2">
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="sin">sin</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="cos">cos</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="tan">tan</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="log">log</button>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="asin">sin⁻¹</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="acos">cos⁻¹</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="atan">tan⁻¹</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="ln">ln</button>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="π">π</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="e">e</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="√">√</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="^">x^y</button>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="(">(</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value=")">)</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="!">x!</button>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn-calc function w-100" data-value="10^">10^x</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2 mb-2">
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value="7">7</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value="8">8</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value="9">9</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc operator w-100" data-value="/">÷</button>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value="4">4</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value="5">5</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value="6">6</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc operator w-100" data-value="*">×</button>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value="1">1</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value="2">2</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value="3">3</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc operator w-100" data-value="-">-</button>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value="0">0</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc w-100" data-value=".">.</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc w-100" id="clear">C</button>
+                        </div>
+                        <div class="col-3">
+                            <button class="btn-calc operator w-100" data-value="+">+</button>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button class="btn-calc w-100" id="delete">DEL</button>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn-calc equals w-100" id="equals">=</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentOperandElement = document.getElementById('currentOperand');
+            const previousOperandElement = document.getElementById('previousOperand');
+            const numberButtons = document.querySelectorAll('[data-value]');
+            const operatorButtons = document.querySelectorAll('.operator');
+            const functionButtons = document.querySelectorAll('.function');
+            const equalsButton = document.getElementById('equals');
+            const clearButton = document.getElementById('clear');
+            const deleteButton = document.getElementById('delete');
+            const toggleScientificButton = document.getElementById('toggleScientific');
+            const scientificPanel = document.getElementById('scientificPanel');
+            const powerButton = document.getElementById('powerBtn');
+            
+            let currentOperand = '0';
+            let previousOperand = '';
+            let operation = undefined;
+            let calculatorOn = true;
+            
+            setTimeout(() => {
+                currentOperandElement.innerHTML = '0<span class="cursor"></span>';
+            }, 500);
+            
+            powerButton.addEventListener('click', () => {
+                calculatorOn = !calculatorOn;
+                if (calculatorOn) {
+                    powerButton.style.backgroundColor = '#4cd964';
+                    powerButton.style.boxShadow = '0 0 5px #4cd964';
+                    currentOperand = '0';
+                    previousOperand = '';
+                    operation = undefined;
+                    updateDisplay();
+                } else {
+                    powerButton.style.backgroundColor = '#ff3b30';
+                    powerButton.style.boxShadow = '0 0 5px #ff3b30';
+                    currentOperandElement.textContent = '';
+                    previousOperandElement.textContent = '';
+                }
+            });
+            
+            toggleScientificButton.addEventListener('click', () => {
+                if (scientificPanel.style.display === 'none' || !scientificPanel.style.display) {
+                    scientificPanel.style.display = 'block';
+                } else {
+                    scientificPanel.style.display = 'none';
+                }
+            });
+            
+            numberButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (!calculatorOn) return;
+                    
+                    const value = button.getAttribute('data-value');
+                    
+                    if (value === '.' && currentOperand.includes('.')) return;
+                    
+                    if (currentOperand === '0' && value !== '.') {
+                        currentOperand = value;
+                    } else {
+                        currentOperand += value;
+                    }
+                    
+                    updateDisplay();
+                });
+            });
+            
+            operatorButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (!calculatorOn) return;
+                    
+                    const value = button.getAttribute('data-value');
+                    chooseOperation(value);
+                });
+            });
+            
+            functionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (!calculatorOn) return;
+                    
+                    const func = button.getAttribute('data-value');
+                    applyScientificFunction(func);
+                });
+            });
+            
+            equalsButton.addEventListener('click', () => {
+                if (!calculatorOn) return;
+                
+                compute();
+                updateDisplay();
+            });
+            
+            clearButton.addEventListener('click', () => {
+                if (!calculatorOn) return;
+                
+                currentOperand = '0';
+                previousOperand = '';
+                operation = undefined;
+                updateDisplay();
+            });
+            
+            deleteButton.addEventListener('click', () => {
+                if (!calculatorOn) return;
+                
+                currentOperand = currentOperand.toString().slice(0, -1);
+                if (currentOperand === '') {
+                    currentOperand = '0';
+                }
+                updateDisplay();
+            });
+            
+            function chooseOperation(op) {
+                if (currentOperand === '') return;
+                
+                if (previousOperand !== '') {
+                    compute();
+                }
+                
+                operation = op;
+                previousOperand = currentOperand;
+                currentOperand = '';
+            }
+            
+            function compute() {
+                let computation;
+                const prev = parseFloat(previousOperand);
+                const current = parseFloat(currentOperand);
+                
+                if (isNaN(prev) || isNaN(current)) return;
+                
+                switch (operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '*':
+                        computation = prev * current;
+                        break;
+                    case '/':
+                        computation = prev / current;
+                        break;
+                    case '^':
+                        computation = Math.pow(prev, current);
+                        break;
+                    default:
+                        return;
+                }
+                
+                currentOperand = computation.toString();
+                operation = undefined;
+                previousOperand = '';
+            }
+            
+            function applyScientificFunction(func) {
+                const num = parseFloat(currentOperand);
+                
+                switch (func) {
+                    case 'sin':
+                        currentOperand = Math.sin(num * Math.PI / 180).toString();
+                        break;
+                    case 'cos':
+                        currentOperand = Math.cos(num * Math.PI / 180).toString();
+                        break;
+                    case 'tan':
+                        currentOperand = Math.tan(num * Math.PI / 180).toString();
+                        break;
+                    case 'asin':
+                        currentOperand = (Math.asin(num) * 180 / Math.PI).toString();
+                        break;
+                    case 'acos':
+                        currentOperand = (Math.acos(num) * 180 / Math.PI).toString();
+                        break;
+                    case 'atan':
+                        currentOperand = (Math.atan(num) * 180 / Math.PI).toString();
+                        break;
+                    case 'log':
+                        currentOperand = Math.log10(num).toString();
+                        break;
+                    case 'ln':
+                        currentOperand = Math.log(num).toString();
+                        break;
+                    case 'π':
+                        currentOperand = Math.PI.toString();
+                        break;
+                    case 'e':
+                        currentOperand = Math.E.toString();
+                        break;
+                    case '√':
+                        currentOperand = Math.sqrt(num).toString();
+                        break;
+                    case '!':
+                        currentOperand = factorial(num).toString();
+                        break;
+                    case '10^':
+                        currentOperand = Math.pow(10, num).toString();
+                        break;
+                    case '(':
+                        currentOperand += '(';
+                        break;
+                    case ')':
+                        currentOperand += ')';
+                        break;
+                    default:
+                        break;
+                }
+                
+                updateDisplay();
+            }
+            
+            function factorial(n) {
+                if (n < 0) return NaN;
+                if (n === 0 || n === 1) return 1;
+                let result = 1;
+                for (let i = 2; i <= n; i++) {
+                    result *= i;
+                }
+                return result;
+            }
+            
+            function updateDisplay() {
+                currentOperandElement.innerHTML = currentOperand + '<span class="cursor"></span>';
+                
+                if (operation != null) {
+                    previousOperandElement.textContent = `${previousOperand} ${operation}`;
+                } else {
+                    previousOperandElement.textContent = previousOperand;
+                }
+            }
+            
+            document.addEventListener('keydown', (e) => {
+                if (!calculatorOn) return;
+                
+                const key = e.key;
+                
+                if (/[0-9]/.test(key)) {
+                    const button = document.querySelector(`[data-value="${key}"]`);
+                    if (button) button.click();
+                } else if (key === '.') {
+                    const button = document.querySelector('[data-value="."]');
+                    if (button) button.click();
+                } else if (key === '+' || key === '-' || key === '*' || key === '/') {
+                    const button = document.querySelector(`[data-value="${key}"]`);
+                    if (button) button.click();
+                } else if (key === 'Enter') {
+                    equalsButton.click();
+                } else if (key === 'Backspace') {
+                    deleteButton.click();
+                } else if (key === 'Escape') {
+                    clearButton.click();
+                } else if (key === '^') {
+                    const button = document.querySelector('[data-value="^"]');
+                    if (button) button.click();
+                } else if (key === '(') {
+                    const button = document.querySelector('[data-value="("]');
+                    if (button) button.click();
+                } else if (key === ')') {
+                    const button = document.querySelector('[data-value=")"]');
+                    if (button) button.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
